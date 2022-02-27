@@ -12,14 +12,28 @@ async function main() {
   // If this script is run directly using `node` you may want to call compile
   // manually to make sure everything is compiled
   // await hre.run('compile');
+  const [owner, randomPerson] = await ethers.getSigners();
 
   // We get the contract to deploy
   const Domains = await ethers.getContractFactory("Domains");
-  const domain = await Domains.deploy();
+  const domainContract = await Domains.deploy();
 
-  await domain.deployed();
+  await domainContract.deployed();
 
-  console.log("Greeter deployed to:", domain.address);
+  console.log("Domains deployed to:", domainContract.address);
+  console.log("Contract deployed by:", owner.address);
+
+  let txn = await domainContract.register("doom");
+  await txn.wait();
+
+  const domainOwner = await domainContract.getAddress("doom");
+  console.log("Owner of domain:", domainOwner);
+
+  // Trying to set a record that doesn't belong to me!
+  txn = await domainContract
+    .connect(randomPerson)
+    .setRecord("doom", "Haha my domain now!");
+  await txn.wait();
 }
 
 // We recommend this pattern to be able to use async/await everywhere
